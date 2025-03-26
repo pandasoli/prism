@@ -1,0 +1,56 @@
+#!/bin/sh
+
+SRCDIR="src"
+BUILDDIR="build"
+TESTDIR="tests"
+
+CC="${CC:-gcc}"
+BUILDFLAGS="$CFLAGS $(tr '\n' ' ' < compile_flags.txt)"
+
+get_files() {
+	find $1 -type f -exec basename {} \;
+}
+
+build_f() {
+	src=$1 obj=$2 cmd=$3
+
+	src_time=$(stat -c "%Y" "$src")
+	obj_time=$(stat -c "%Y" "$obj" 2> /dev/null || echo 0)
+
+	[ -f "$obj" ] && [ $obj_time -ge $src_time ] && return 69 || { eval "printf '%s\n' \"$cmd\""; eval "$cmd"; }
+}
+
+build_dir() {
+	srcdir=$1 objdir=$2 build=$3 objext=$4
+
+	srcs=$(get_files $srcdir)
+	set -- $srcs; size=$#
+	changed=1 i=1
+
+	mkdir -p $objdir
+
+	while [ $i -le $size ]; do
+		set -- $srcs; eval "src=\$$i"
+
+		build_f "$srcdir/$src" "$objdir/$src.$objext" "$cmd"
+		[ $? -ne 69 ] && { [ $? -eq 0 ] && changed=0 || exit $?; }
+
+		i=$((i + 1))
+	done
+
+	return $changed
+}
+
+case $1 in
+	"clean") rm -r $BUILDDIR ;;
+	*)
+		cmd='$CC $BUILDFLAGS -c -o $obj $src'
+		build_dir $SRCDIR $BUILDDIR "$cmd" "o"
+		changed=$?
+
+		[ $changed -ne 0 ] && [ -f "$BUILDDIR/main" ] || {
+			objs=$(get_files $SRCDIR | sed "s|.*|$BUILDDIR/&.o|")
+			echo $CC $BUILDFLAGS -o "$BUILDDIR/main" $objs
+			$CC $BUILDFLAGS -o "$BUILDDIR/main" $objs
+		}
+esac
