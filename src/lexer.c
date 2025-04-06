@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <lex.h>
+#include <lexer.h>
 #include <string.h>
 #include <token.h>
 
@@ -10,7 +10,7 @@
 #define IS_DEC '0' <= CURRENT && CURRENT <= '9'
 #define IS_ID ('a' <= CURRENT && CURRENT <= 'z') || ('A' <= CURRENT && CURRENT <= 'Z') || CURRENT == '_'
 
-int lex(lex, token) Lex *lex; Token *token; {
+int lex(lex, token) Lexer *lex; Token *token; {
 	while (
 		CURRENT == ' ' ||
 		CURRENT == '\t' ||

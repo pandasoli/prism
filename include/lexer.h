@@ -5,6 +5,6 @@
 typedef struct {
 	char *src;
 	unsigned long pos;
-} Lex;
+} Lexer;
 
-extern int lex(Lex *, Token *);
+extern int lex(Lexer *, Token *);
