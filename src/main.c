@@ -1,30 +1,39 @@
-#include <stdio.h>
 #include <lexer.h>
-#include <token.h>
+#include <parser.h>
+#include <debug.h>
 
-main() {
-	Lexer l = { "12 +\r4 /\n5 * asd\t-1 and a != 4", 0 };
-	Token tok;
+
+int main(void) {
+	/* (((12 + ((4 / 5) * asd)) -1) and (a != 4)) */
+	char src[] = "12 +\r4 /\n5 * asd\t-1 and a != 4";
+	Lexer l = { src, 0 };
+	Parser p = { (Token) {}, &l };
+	Node *n;
 	int err;
 
-	do {
-		err = lex(&l, &tok);
-		if (err) break;
+	err = parse(&p, &n);
+	if (err) return err;
 
-		int len = l.pos - tok.start;
-		char *kind_img;
+	print_node(src, n);
 
-		switch (tok.kind) {
-#define X(kind) case kind ## _TK: kind_img = #kind; break;
-#define K(kind, img) case kind ## _KW: kind_img = #kind; break;
-			TOKENKINDS
-#undef X
-#undef K
-		}
-
-		printf("%s %.*s\n", kind_img, len, l.src + tok.start);
-	}
-	while (tok.kind != EOI_TK);
+/*	do {*/
+/*		err = lex(&l, &tok);*/
+/*		if (err) break;*/
+/**/
+/*		int len = l.pos - tok.start;*/
+/*		char *kind_img;*/
+/**/
+/*		switch (tok.kind) {*/
+/*#define X(kind) case kind ## _TK: kind_img = #kind; break;*/
+/*#define K(kind, img) case kind ## _KW: kind_img = #kind; break;*/
+/*			TOKENKINDS*/
+/*#undef X*/
+/*#undef K*/
+/*		}*/
+/**/
+/*		printf("%s %.*s\n", kind_img, len, l.src + tok.start);*/
+/*	}*/
+/*	while (tok.kind != EOI_TK);*/
 
 	return 0;
 }
