@@ -7,4 +7,4 @@ typedef struct {
 	unsigned long pos;
 } Lexer;
 
-extern int lex(Lexer *, Token *);
+extern lex(Lexer *, Token *);

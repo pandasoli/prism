@@ -2,8 +2,7 @@
 #include <lexer.h>
 #include <token.h>
 
-
-int main(void) {
+main() {
 	Lexer l = { "12 +\r4 /\n5 * asd\t-1 and a != 4", 0 };
 	Token tok;
 	int err;
