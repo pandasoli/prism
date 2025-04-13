@@ -1,4 +1,5 @@
 -Iinclude
 -std=c89
+-Wall
 -Wextra
 -Wno-deprecated-non-prototype

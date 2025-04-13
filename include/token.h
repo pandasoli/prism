@@ -2,10 +2,10 @@
 
 #include <stdlib.h>
 
-#define TOKENKINDS                          \
+#define TOKENKINDS                            \
 	X(EOI) X(UNKNOWN)                         \
 	                                          \
-	/* Arithimatic operators */               \
+	/* Arithmetic operators */                \
 	X(ADD) X(SUB)                             \
 	X(MUL) X(DIV)                             \
 	X(MOD)                                    \
@@ -15,7 +15,7 @@
 	X(BIT_SHL) X(BIT_SHR)                     \
 	X(BIT_NOT) X(BIT_XOR)                     \
 	                                          \
-	/* Operators following assignment */      \
+	/* Assignment operators */                \
 	X(ADD_ASSIGN) X(SUB_ASSIGN)               \
 	X(MUL_ASSIGN) X(DIV_ASSIGN)               \
 	X(MOD_ASSIGN)                             \
@@ -39,7 +39,12 @@
 	                                          \
 	/* Literals */                            \
 	X(IDENT) X(INT) X(FLOAT)                  \
-	X(STRING) X(CHAR)
+	X(STRING) X(CHAR)                         \
+	                                          \
+	/* Keywords */                            \
+	K(LET, "let") K(VAR, "var")               \
+	K(IF, "if") K(ELSE, "else")               \
+	K(TRUE, "true") K(FALSE, "false")         \
 
 typedef enum {
 #define X(kind) kind ## _TK,

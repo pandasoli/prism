@@ -123,7 +123,7 @@ lex(lex, token) Lexer *lex; Token *token; {
 			}
 		} break;
 
-		default:
+		default: {
 			if (IS_DEC) {
 				kind = INT_TK;
 				while (IS_DEC) NEXT;
@@ -148,6 +148,7 @@ lex(lex, token) Lexer *lex; Token *token; {
 					if (keywords[i].len == len && strncmp(keywords[i].img, src, len) == 0)
 						kind = keywords[i].kind;
 			}
+		}
 	}
 
 	if (kind == UNKNOWN_TK) {
