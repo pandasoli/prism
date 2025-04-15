@@ -2,4 +2,8 @@
 -std=c89
 -Wall
 -Wextra
--Wno-deprecated-non-prototype
+-Wno-implicit-int
+-Wno-return-type
+-Wno-unused-value
+-Wno-parentheses
+-fPIC

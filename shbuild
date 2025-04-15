@@ -5,6 +5,7 @@ BUILDDIR="build"
 TESTDIR="tests"
 
 CC="${CC:-gcc}"
+LD="${LD:-ld}"
 BUILDFLAGS="$CFLAGS $(tr '\n' ' ' < compile_flags.txt)"
 
 get_files() {
@@ -12,30 +13,28 @@ get_files() {
 }
 
 build_f() {
-	src=$1 obj=$2 cmd=$3
+	src=$1 obj=$2 opts=$3
 
 	src_time=$(stat -c "%Y" "$src")
 	obj_time=$(stat -c "%Y" "$obj" 2> /dev/null || echo 0)
 
-	[ -f "$obj" ] && [ $obj_time -ge $src_time ] && return 69 || { eval "printf '%s\n' \"$cmd\""; eval "$cmd"; }
+	[ -f "$obj" ] && [ $obj_time -ge $src_time ] && return 69 || {
+		cmd="$CC $BUILDFLAGS $opts -o $obj $src"
+		echo $cmd; $cmd
+	}
 }
 
 build_dir() {
-	srcdir=$1 objdir=$2 build=$3 objext=$4
+	dir=$1 opts=$2 objext=$3
 
-	srcs=$(get_files $srcdir)
-	set -- $srcs; size=$#
-	changed=1 i=1
+	objdir="$BUILDDIR/$dir"
+	changed=1
 
 	mkdir -p $objdir
 
-	while [ $i -le $size ]; do
-		set -- $srcs; eval "src=\$$i"
-
-		build_f "$srcdir/$src" "$objdir/$src.$objext" "$cmd"
+	for src in $(get_files $dir); do
+		build_f "$dir/$src" "$objdir/${src%.*}$objext" "$opts"
 		[ $? -ne 69 ] && { [ $? -eq 0 ] && changed=0 || exit $?; }
-
-		i=$((i + 1))
 	done
 
 	return $changed
@@ -43,14 +42,28 @@ build_dir() {
 
 case $1 in
 	"clean") rm -r $BUILDDIR ;;
-	*)
-		cmd='$CC $BUILDFLAGS -c -o $obj $src'
-		build_dir $SRCDIR $BUILDDIR "$cmd" "o"
+	"test")
+		for t in build/tests/*; do
+			LD_LIBRARY_PATH=$LD_LIBRARY_PATH:build $t
+		done
+		;;
+
+	"tests")
+		build_dir $TESTDIR "-Lbuild -lprism" ""
+		;;
+
+	"lib")
+		build_dir $SRCDIR "-c" ".o"
 		changed=$?
 
 		[ $changed -ne 0 ] && [ -f "$BUILDDIR/main" ] || {
-			objs=$(get_files $SRCDIR | sed "s|.*|$BUILDDIR/&.o|")
-			echo $CC $BUILDFLAGS -o "$BUILDDIR/main" $objs
-			$CC $BUILDFLAGS -o "$BUILDDIR/main" $objs
+			objs=$(get_files $SRCDIR | sed "s|\(.*\)\.[^.]*|$BUILDDIR/$SRCDIR/\1.o|")
+			cmd="$LD -shared -o $BUILDDIR/libprism.so $objs"
+			echo $cmd; $cmd
 		}
+		;;
+
+	*)
+		$0 lib
+		$0 tests
 esac
