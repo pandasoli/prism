@@ -147,8 +147,10 @@ lex(lex, token) Lexer *lex; Token *token; {
 				unsigned long len = lex->pos - start;
 
 				for (i = 0; keywords[i].kind != 0 && kind == IDENT_TK; ++i)
-					if (keywords[i].len == len && strncmp(keywords[i].img, src, len) == 0)
+					if (keywords[i].len == len && strncmp(keywords[i].img, src, len) == 0) {
 						kind = keywords[i].kind;
+						break;
+					}
 			}
 		}
 	}
