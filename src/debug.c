@@ -15,7 +15,7 @@ char *token_strkind(kind) TokenKind kind; {
 }
 
 print_node(src, node) char *src; Node *node; {
-	assert(node != NULL);
+	if (node == NULL) return 0;
 
 	int err;
 
@@ -47,7 +47,26 @@ print_node(src, node) char *src; Node *node; {
 			putchar(')');
 			break;
 
+		case IF_NK:
+			printf("if ");
+			print_node(src, node->if_.cmp);
+			printf(" { ");
+			print_node(src, node->if_.body);
+			printf(" } ");
+			break;
+
+		case ELSE_NK:
+			printf("else {");
+			print_node(src, node->else_.body);
+			printf(" } ");
+			break;
+
 		default: assert(0);
+	}
+
+	if (node->next) {
+		printf(", ");
+		print_node(src, node->next);
 	}
 
 	return 0;

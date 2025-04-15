@@ -35,6 +35,7 @@
 	                                          \
 	/* Other symbols */                       \
 	X(OPEN_PAREN) X(CLOSE_PAREN)              \
+	X(OPEN_BRACE) X(CLOSE_BRACE)              \
 	X(COMMA) X(ASSIGN)                        \
 	                                          \
 	/* Literals */                            \

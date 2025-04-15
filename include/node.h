@@ -4,7 +4,10 @@
 
 #define NODEKINDS    \
 	X(BINARY) X(UNARY) \
-	X(LIT)
+	X(LIT)             \
+	                   \
+	/* Statements */   \
+	X(IF) X(ELSE)
 
 typedef enum {
 #define X(kind) kind ## _NK,
@@ -25,10 +28,21 @@ typedef struct {
 	TokenKind op;
 } UnaryNode;
 
+typedef struct {
+	Node *cmp;
+	Node *body;
+} IfNode;
+
+typedef struct {
+	Node *body;
+} ElseNode;
+
 struct Node {
 	NodeKind kind;
 
 	union {
+		IfNode if_;
+		ElseNode else_;
 		BinaryNode binary;
 		UnaryNode unary;
 		Token lit;

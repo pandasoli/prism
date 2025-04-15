@@ -5,7 +5,7 @@
 
 int main(void) {
 	/* (((12 + ((4 / 5) * asd)) -1) and (a != 4)) */
-	char src[] = "12 +\r4 /\n5 * asd\t-1 and a != 4";
+	char src[] = "if a + 1 == 6 or a == 6 {} else if {} {}";
 	Lexer l = { src, 0 };
 	Parser p = { (Token) {}, &l };
 	Node *n;

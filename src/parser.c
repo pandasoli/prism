@@ -49,6 +49,18 @@ static factor(self, node) Parser *self; Node **node; {
 			ERR(NEXT);
 		} break;
 
+		case OPEN_BRACE_TK: {
+			/*ERR(NEXT);*/
+			ERR(parse(self, node));
+
+			if (CURRENT.kind != CLOSE_BRACE_TK) {
+				fprintf(stderr, "(%s) at %ld: Expected closing brace\n", __FUNCTION__, CURRENT.start);
+				return 1;
+			}
+
+			ERR(NEXT);
+		} break;
+
 		default:
 			fprintf(stderr, "(%s) at %ld: Unexpected %s token\n", __FUNCTION__, CURRENT.start, token_strkind(CURRENT.kind));
 			return 1;
@@ -182,6 +194,59 @@ static logic(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
+static stmt(self, node) Parser *self; Node **node; {
+	int err;
+
+	if (CURRENT.kind == IF_KW) {
+		ERR(NEXT);
+
+		Node *cmp;
+		ERR(logic(self, &cmp));
+
+		Node *body;
+		ERR(stmt(self, &body));
+
+		Node *n = malloc(sizeof(Node));
+		if (n == NULL) {
+			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
+			return 1;
+		}
+
+		n->kind = IF_NK;
+		n->if_ = (IfNode) { cmp, body };
+		n->next = NULL;
+
+		*node = n;
+	}
+	else if (CURRENT.kind == ELSE_KW) {
+		if ((*node)->kind != IF_NK) {
+			fprintf(stderr, "(%s) at %ld: Expected 'if' before 'else'\n", __FUNCTION__, CURRENT.start);
+			return 1;
+		}
+
+		ERR(NEXT);
+
+		Node *body;
+		ERR(stmt(self, &body));
+
+		Node *n = malloc(sizeof(Node));
+		if (n == NULL) {
+			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
+			return 1;
+		}
+
+		n->kind = ELSE_NK;
+		n->else_ = (ElseNode) { body };
+		n->next = NULL;
+
+		*node = n;
+	}
+	else
+		return logic(self, node);
+
+	return 0;
+}
+
 parse(self, node) Parser *self; Node **node; {
 	assert(self != NULL);
 	assert(node != NULL);
@@ -192,8 +257,8 @@ parse(self, node) Parser *self; Node **node; {
 	Node *new, *tail = NULL;
 	*node = NULL;
 
-	while (CURRENT.kind != EOI_TK) {
-		ERR(logic(self, &new));
+	while (CURRENT.kind != EOI_TK && CURRENT.kind != CLOSE_BRACE_TK) {
+		ERR(stmt(self, &new));
 
 		/* Linked list append */
 		tail = *node == NULL

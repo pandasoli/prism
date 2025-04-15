@@ -26,6 +26,8 @@ lex(lex, token) Lexer *lex; Token *token; {
 
 		case '(': kind = OPEN_PAREN_TK; NEXT; break;
 		case ')': kind = CLOSE_PAREN_TK; NEXT; break;
+		case '{': kind = OPEN_BRACE_TK; NEXT; break;
+		case '}': kind = CLOSE_BRACE_TK; NEXT; break;
 		case ',': kind = COMMA_TK; NEXT; break;
 
 		case '+':
