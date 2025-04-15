@@ -2,7 +2,7 @@
 
 #include <token.h>
 
-#define NODEKINDS      \
+#define NODEKINDS    \
 	X(BINARY) X(UNARY) \
 	X(LIT)
 

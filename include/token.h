@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#define TOKENKINDS                            \
+#define TOKENKINDS                          \
 	X(EOI) X(UNKNOWN)                         \
 	                                          \
 	/* Arithmetic operators */                \
