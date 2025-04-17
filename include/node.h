@@ -2,7 +2,7 @@
 
 #include <token.h>
 
-#define NODEKINDS    \
+#define NODEKINDS      \
 	X(BINARY) X(UNARY) \
 	X(LIT)             \
 	                   \
@@ -13,40 +13,41 @@ typedef enum {
 #define X(kind) kind ## _NK,
 	NODEKINDS
 #undef X
-} NodeKind;
+} PrismNodeKind;
 
-typedef struct Node Node;
-
-typedef struct {
-	Node *left;
-	Node *right;
-	TokenKind op;
-} BinaryNode;
+typedef struct PrismNode PrismNode;
 
 typedef struct {
-	Node *val;
-	TokenKind op;
-} UnaryNode;
+	PrismNode *left;
+	PrismNode *right;
+	PrismTokenKind op;
+} PrismBinaryNode;
 
 typedef struct {
-	Node *cmp;
-	Node *body;
-} IfNode;
+	PrismNode *val;
+	PrismTokenKind op;
+} PrismUnaryNode;
 
 typedef struct {
-	Node *body;
-} ElseNode;
+	PrismNode *cmp;
+	PrismNode *body;
+} PrismIfNode;
 
-struct Node {
-	NodeKind kind;
+typedef struct {
+	PrismNode *body;
+} PrismElseNode;
+
+struct PrismNode {
+	PrismNodeKind kind;
 
 	union {
-		IfNode if_;
-		ElseNode else_;
-		BinaryNode binary;
-		UnaryNode unary;
-		Token lit;
+		PrismIfNode if_;
+		PrismElseNode else_;
+		PrismBinaryNode binary;
+		PrismUnaryNode unary;
+		PrismToken lit;
 	};
 
-	Node *next;
+	PrismNode *next;
 };
+

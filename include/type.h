@@ -1,9 +1,13 @@
 #pragma once
 
-#define TYPEIDS   \
+#include "node.h"
+
+#define TYPEIDS     \
 	X(INT) X(FLOAT) \
 	X(STR) X(CHAR)  \
-	X(BOOL) X(VOID)
+	X(BOOL) X(VOID) \
+    \
+    X(ERROR) /* when the type checker fails */
 
 typedef enum {
 #define X(type) type ## _TYPE,
@@ -15,3 +19,6 @@ typedef struct {
     TypeId id;
     /* union { }; // TODO: for types that require more information */
 } Type;
+
+extern check_type(PrismNode **);
+

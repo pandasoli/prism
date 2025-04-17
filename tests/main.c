@@ -6,15 +6,15 @@
 int main(void) {
 	/* (((12 + ((4 / 5) * asd)) -1) and (a != 4)) */
 	char src[] = "if a + 1 == 6 or a == 6 {} else if {} {}";
-	Lexer l = { src, 0 };
-	Parser p = { (Token) {}, &l };
-	Node *n;
+	PrismLexer l = { src, 0 };
+	PrismParser p = { (PrismToken) {}, &l };
+	PrismNode *n;
 	int err;
 
-	err = parse(&p, &n);
+	err = prism_parse(&p, &n);
 	if (err) return err;
 
-	print_node(src, n);
+	prism_print_node(src, n);
 
 /*	do {*/
 /*		err = lex(&l, &tok);*/

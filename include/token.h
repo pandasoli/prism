@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#define TOKENKINDS                          \
+#define TOKENKINDS                            \
 	X(EOI) X(UNKNOWN)                         \
 	                                          \
 	/* Arithmetic operators */                \
@@ -53,15 +53,15 @@ typedef enum {
 	TOKENKINDS
 #undef X
 #undef K
-} TokenKind;
+} PrismTokenKind;
 
 typedef struct {
-	TokenKind kind;
+	PrismTokenKind kind;
 	char *img;
 	unsigned long len;
-} KeywordInfo;
+} PrismKeywordInfo;
 
-static KeywordInfo keywords[] = {
+static PrismKeywordInfo keywords[] = {
 #define X(kind)
 #define K(kind, img) {kind ## _KW, img, sizeof(img) / sizeof(img[0]) - 1},
 	TOKENKINDS
@@ -71,6 +71,6 @@ static KeywordInfo keywords[] = {
 };
 
 typedef struct {
-	TokenKind kind;
+	PrismTokenKind kind;
 	unsigned long start;
-} Token;
+} PrismToken;

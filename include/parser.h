@@ -4,8 +4,8 @@
 #include <node.h>
 
 typedef struct {
-	Token	current;
-	Lexer *lexer;
-} Parser;
+	PrismToken current;
+	PrismLexer *lexer;
+} PrismParser;
 
-extern parse(Parser *, Node **);
+extern prism_parse(PrismParser *, PrismNode **);

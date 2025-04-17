@@ -5,6 +5,7 @@
 typedef struct {
 	char *src;
 	unsigned long pos;
-} Lexer;
+} PrismLexer;
 
-extern lex(Lexer *, Token *);
+extern prism_lex(PrismLexer *, PrismToken *);
+

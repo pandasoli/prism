@@ -6,15 +6,15 @@
 #include <debug.h>
 
 #define CURRENT self->current
-#define NEXT lex(self->lexer, &CURRENT)
+#define NEXT prism_lex(self->lexer, &CURRENT)
 
 /* A short for the toppest expr */
 #define expr logic
 #define ERR(e) if ((err = e)) return err
 
-static logic(Parser *, Node **);
+static logic(PrismParser *, PrismNode **);
 
-static factor(self, node) Parser *self; Node **node; {
+static factor(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 
 	switch (CURRENT.kind) {
@@ -23,7 +23,7 @@ static factor(self, node) Parser *self; Node **node; {
 		case IDENT_TK:
 		case STRING_TK:
 		case CHAR_TK: {
-			Node *n = malloc(sizeof(Node));
+			PrismNode *n = malloc(sizeof(PrismNode));
 			if (n == NULL) {
 				fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 				return 1;
@@ -51,7 +51,7 @@ static factor(self, node) Parser *self; Node **node; {
 
 		case OPEN_BRACE_TK: {
 			/*ERR(NEXT);*/
-			ERR(parse(self, node));
+			ERR(prism_parse(self, node));
 
 			if (CURRENT.kind != CLOSE_BRACE_TK) {
 				fprintf(stderr, "(%s) at %ld: Expected closing brace\n", __FUNCTION__, CURRENT.start);
@@ -62,25 +62,25 @@ static factor(self, node) Parser *self; Node **node; {
 		} break;
 
 		default:
-			fprintf(stderr, "(%s) at %ld: Unexpected %s token\n", __FUNCTION__, CURRENT.start, token_strkind(CURRENT.kind));
+			fprintf(stderr, "(%s) at %ld: Unexpected %s token\n", __FUNCTION__, CURRENT.start, prism_token_strkind(CURRENT.kind));
 			return 1;
 	}
 
 	return 0;
 }
 
-static unary(self, node) Parser *self; Node **node; {
+static unary(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 
 	if (CURRENT.kind == SUB_TK) {
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = UNARY_NK;
-		n->unary = (UnaryNode) { .op = CURRENT.kind };
+		n->unary = (PrismUnaryNode) { .op = CURRENT.kind };
 		n->next = NULL;
 
 		ERR(NEXT);
@@ -94,19 +94,19 @@ static unary(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
-static mul(self, node) Parser *self; Node **node; {
+static mul(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 	ERR(unary(self, node));
 
 	while (CURRENT.kind == MUL_TK || CURRENT.kind == DIV_TK) {
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = BINARY_NK;
-		n->binary = (BinaryNode) { .left = *node, .op = CURRENT.kind };
+		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
 		n->next = NULL;
 
 		ERR(NEXT);
@@ -118,19 +118,19 @@ static mul(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
-static add(self, node) Parser *self; Node **node; {
+static add(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 	ERR(mul(self, node));
 
 	while (CURRENT.kind == ADD_TK || CURRENT.kind == SUB_TK) {
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = BINARY_NK;
-		n->binary = (BinaryNode) { .left = *node, .op = CURRENT.kind };
+		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
 		n->next = NULL;
 
 		ERR(NEXT);
@@ -142,7 +142,7 @@ static add(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
-static cmp(self, node) Parser *self; Node **node; {
+static cmp(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 	ERR(add(self, node));
 
@@ -151,14 +151,14 @@ static cmp(self, node) Parser *self; Node **node; {
 		CURRENT.kind == LESS_TK || CURRENT.kind == LESS_EQUAL_TK ||
 		CURRENT.kind == GREATER_TK || CURRENT.kind == GREATER_EQUAL_TK
 	) {
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = BINARY_NK;
-		n->binary = (BinaryNode) { .left = *node, .op = CURRENT.kind };
+		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
 		n->next = NULL;
 
 		ERR(NEXT);
@@ -170,19 +170,19 @@ static cmp(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
-static logic(self, node) Parser *self; Node **node; {
+static logic(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 	ERR(cmp(self, node));
 
 	while (CURRENT.kind == LOGIC_AND_KW || CURRENT.kind == LOGIC_OR_KW) {
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = BINARY_NK;
-		n->binary = (BinaryNode) { .left = *node, .op = CURRENT.kind };
+		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
 		n->next = NULL;
 
 		ERR(NEXT);
@@ -194,26 +194,26 @@ static logic(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
-static stmt(self, node) Parser *self; Node **node; {
+static stmt(self, node) PrismParser *self; PrismNode **node; {
 	int err;
 
 	if (CURRENT.kind == IF_KW) {
 		ERR(NEXT);
 
-		Node *cmp;
+		PrismNode *cmp;
 		ERR(logic(self, &cmp));
 
-		Node *body;
+		PrismNode *body;
 		ERR(stmt(self, &body));
 
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = IF_NK;
-		n->if_ = (IfNode) { cmp, body };
+		n->if_ = (PrismIfNode) { cmp, body };
 		n->next = NULL;
 
 		*node = n;
@@ -226,17 +226,17 @@ static stmt(self, node) Parser *self; Node **node; {
 
 		ERR(NEXT);
 
-		Node *body;
+		PrismNode *body;
 		ERR(stmt(self, &body));
 
-		Node *n = malloc(sizeof(Node));
+		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
 			return 1;
 		}
 
 		n->kind = ELSE_NK;
-		n->else_ = (ElseNode) { body };
+		n->else_ = (PrismElseNode) { body };
 		n->next = NULL;
 
 		*node = n;
@@ -247,14 +247,14 @@ static stmt(self, node) Parser *self; Node **node; {
 	return 0;
 }
 
-parse(self, node) Parser *self; Node **node; {
+parse(self, node) PrismParser *self; PrismNode **node; {
 	assert(self != NULL);
 	assert(node != NULL);
 
 	int err;
 	ERR(NEXT);
 
-	Node *new, *tail = NULL;
+	PrismNode *new, *tail = NULL;
 	*node = NULL;
 
 	while (CURRENT.kind != EOI_TK && CURRENT.kind != CLOSE_BRACE_TK) {

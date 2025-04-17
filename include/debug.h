@@ -3,5 +3,5 @@
 #include <token.h>
 #include <node.h>
 
-extern char *token_strkind(TokenKind);
-extern print_node(char *, Node *);
+extern char *prism_token_strkind(PrismTokenKind);
+extern prism_print_node(char *, PrismNode *);

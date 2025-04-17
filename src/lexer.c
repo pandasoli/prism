@@ -10,7 +10,7 @@
 #define IS_DEC '0' <= CURRENT && CURRENT <= '9'
 #define IS_ID ('a' <= CURRENT && CURRENT <= 'z') || ('A' <= CURRENT && CURRENT <= 'Z') || CURRENT == '_'
 
-lex(lex, token) Lexer *lex; Token *token; {
+lex(lex, token) PrismLexer *lex; PrismToken *token; {
 	while (
 		CURRENT == ' ' ||
 		CURRENT == '\t' ||
@@ -18,7 +18,7 @@ lex(lex, token) Lexer *lex; Token *token; {
 		CURRENT == '\n'
 	) NEXT;
 
-	TokenKind kind = UNKNOWN_TK;
+	PrismTokenKind kind = UNKNOWN_TK;
 	unsigned long start = lex->pos;
 
 	switch (CURRENT) {
@@ -160,6 +160,6 @@ lex(lex, token) Lexer *lex; Token *token; {
 		exit(1);
 	}
 
-	*token = (Token) { kind, start };
+	*token = (PrismToken) { kind, start };
 	return 0;
 }
