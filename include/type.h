@@ -20,5 +20,5 @@ typedef struct {
     /* union { }; // TODO: for types that require more information */
 } Type;
 
-extern check_type(PrismNode **);
+extern Type check_type(PrismNode **);
 

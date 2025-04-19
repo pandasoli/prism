@@ -1,6 +1,6 @@
 #pragma once
 
-#include <token.h>
+#include "token.h"
 
 #define NODEKINDS      \
 	X(BINARY) X(UNARY) \
