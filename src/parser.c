@@ -95,16 +95,34 @@ static unary(self, node) PrismParser *self; PrismNode **node; {
 	return 0;
 }
 
+/* https://en.cppreference.com/w/c/language/operator_precedence */
 static get_binprecedence(kind) PrismTokenKind kind; {
 	switch (kind) {
-		case MUL_TK: case DIV_TK:
-			return 4;
+		case MUL_TK: case DIV_TK: case MOD_TK:
+			return 11;
 		case ADD_TK: case SUB_TK:
-			return 3;
-		case EQUAL_TK: case NOT_EQUAL_TK: case LESS_TK: case LESS_EQUAL_TK: case GREATER_TK: case GREATER_EQUAL_TK:
-			return 2;
-		case LOGIC_AND_KW: case LOGIC_OR_KW:
+			return 10;
+		case BIT_SHL_TK: case BIT_SHR_TK:
+			return 9;
+		case LESS_TK: case LESS_EQUAL_TK: case GREATER_TK: case GREATER_EQUAL_TK:
+			return 8;
+		case EQUAL_TK: case NOT_EQUAL_TK:
+			return 7;
+		case BIT_AND_TK: return 6;
+		case BIT_XOR_TK: return 5;
+		case BIT_OR_TK: return 4;
+		case LOGIC_AND_KW: return 3;
+		case LOGIC_OR_KW: return 2;
+
+		case ADD_ASSIGN_TK: case SUB_ASSIGN_TK:
+		case MUL_ASSIGN_TK: case DIV_ASSIGN_TK:
+		case MOD_ASSIGN_TK:
+
+		case BIT_AND_ASSIGN_TK: case BIT_OR_ASSIGN_TK:
+		case BIT_SHL_ASSIGN_TK: case BIT_SHR_ASSIGN_TK:
+		case BIT_NOT_ASSIGN_TK: case BIT_XOR_ASSIGN_TK:
 			return 1;
+
 		default:
 			return 0;
 	}
@@ -118,8 +136,6 @@ static binary(self, node, parent_precedence) PrismParser *self; PrismNode **node
 		int precedence = get_binprecedence(CURRENT.kind);
 		if (precedence == 0 || precedence <= parent_precedence)
 			break;
-
-		printf("%d\n", precedence);
 
 		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
