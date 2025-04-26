@@ -1,3 +1,4 @@
+#include "token.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,10 +10,10 @@
 #define NEXT prism_lex(self->lexer, &CURRENT)
 
 /* A short for the toppest expr */
-#define expr logic
+#define expr binary
 #define ERR(e) if ((err = e)) return err
 
-static logic(PrismParser *, PrismNode **);
+static binary(PrismParser *, PrismNode **, int);
 
 static factor(self, node) PrismParser *self; PrismNode **node; {
 	int err;
@@ -39,7 +40,7 @@ static factor(self, node) PrismParser *self; PrismNode **node; {
 
 		case OPEN_PAREN_TK: {
 			ERR(NEXT);
-			ERR(expr(self, node));
+			ERR(expr(self, node, 0));
 
 			if (CURRENT.kind != CLOSE_PAREN_TK) {
 				fprintf(stderr, "(%s) at %ld: Expected closing parenthesis\n", __FUNCTION__, CURRENT.start);
@@ -94,11 +95,32 @@ static unary(self, node) PrismParser *self; PrismNode **node; {
 	return 0;
 }
 
-static mul(self, node) PrismParser *self; PrismNode **node; {
+static get_binprecedence(kind) PrismTokenKind kind; {
+	switch (kind) {
+		case MUL_TK: case DIV_TK:
+			return 4;
+		case ADD_TK: case SUB_TK:
+			return 3;
+		case EQUAL_TK: case NOT_EQUAL_TK: case LESS_TK: case LESS_EQUAL_TK: case GREATER_TK: case GREATER_EQUAL_TK:
+			return 2;
+		case LOGIC_AND_KW: case LOGIC_OR_KW:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+static binary(self, node, parent_precedence) PrismParser *self; PrismNode **node; int parent_precedence; {
 	int err;
 	ERR(unary(self, node));
 
-	while (CURRENT.kind == MUL_TK || CURRENT.kind == DIV_TK) {
+	for (;;) {
+		int precedence = get_binprecedence(CURRENT.kind);
+		if (precedence == 0 || precedence <= parent_precedence)
+			break;
+
+		printf("%d\n", precedence);
+
 		PrismNode *n = malloc(sizeof(PrismNode));
 		if (n == NULL) {
 			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
@@ -110,83 +132,7 @@ static mul(self, node) PrismParser *self; PrismNode **node; {
 		n->next = NULL;
 
 		ERR(NEXT);
-		ERR(unary(self, &n->binary.right));
-
-		*node = n;
-	}
-
-	return 0;
-}
-
-static add(self, node) PrismParser *self; PrismNode **node; {
-	int err;
-	ERR(mul(self, node));
-
-	while (CURRENT.kind == ADD_TK || CURRENT.kind == SUB_TK) {
-		PrismNode *n = malloc(sizeof(PrismNode));
-		if (n == NULL) {
-			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
-			return 1;
-		}
-
-		n->kind = BINARY_NK;
-		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
-		n->next = NULL;
-
-		ERR(NEXT);
-		ERR(mul(self, &n->binary.right));
-
-		*node = n;
-	}
-
-	return 0;
-}
-
-static cmp(self, node) PrismParser *self; PrismNode **node; {
-	int err;
-	ERR(add(self, node));
-
-	while (
-		CURRENT.kind == EQUAL_TK || CURRENT.kind == NOT_EQUAL_TK ||
-		CURRENT.kind == LESS_TK || CURRENT.kind == LESS_EQUAL_TK ||
-		CURRENT.kind == GREATER_TK || CURRENT.kind == GREATER_EQUAL_TK
-	) {
-		PrismNode *n = malloc(sizeof(PrismNode));
-		if (n == NULL) {
-			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
-			return 1;
-		}
-
-		n->kind = BINARY_NK;
-		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
-		n->next = NULL;
-
-		ERR(NEXT);
-		ERR(add(self, &n->binary.right));
-
-		*node = n;
-	}
-
-	return 0;
-}
-
-static logic(self, node) PrismParser *self; PrismNode **node; {
-	int err;
-	ERR(cmp(self, node));
-
-	while (CURRENT.kind == LOGIC_AND_KW || CURRENT.kind == LOGIC_OR_KW) {
-		PrismNode *n = malloc(sizeof(PrismNode));
-		if (n == NULL) {
-			fprintf(stderr, "(%s) at %ld: No more memory\n", __FUNCTION__, CURRENT.start);
-			return 1;
-		}
-
-		n->kind = BINARY_NK;
-		n->binary = (PrismBinaryNode) { .left = *node, .op = CURRENT.kind };
-		n->next = NULL;
-
-		ERR(NEXT);
-		ERR(cmp(self, &n->binary.right));
+		ERR(binary(self, &n->binary.right, precedence));
 
 		*node = n;
 	}
@@ -201,7 +147,7 @@ static stmt(self, node) PrismParser *self; PrismNode **node; {
 		ERR(NEXT);
 
 		PrismNode *cmp;
-		ERR(logic(self, &cmp));
+		ERR(binary(self, &cmp, 0));
 
 		PrismNode *body;
 		ERR(stmt(self, &body));
@@ -242,12 +188,12 @@ static stmt(self, node) PrismParser *self; PrismNode **node; {
 		*node = n;
 	}
 	else
-		return logic(self, node);
+		return binary(self, node, 0);
 
 	return 0;
 }
 
-parse(self, node) PrismParser *self; PrismNode **node; {
+prism_parse(self, node) PrismParser *self; PrismNode **node; {
 	assert(self != NULL);
 	assert(node != NULL);
 
